@@ -669,9 +669,10 @@
     </div>
 
     <script>
-        // Use relative path for static JSON data (works locally and on deployed site)
+        // Detect if running locally vs deployed
+        const isLocalFile = window.location.protocol === 'file:';
+        const USE_STATIC_DATA = !isLocalFile; // Use static data only when deployed, not for local file testing
         const API_BASE = window.location.protocol + '//' + window.location.host;
-        const USE_STATIC_DATA = true; // Set to true for production deployment
         let allCharacters = [];
         let foundingFathers = [];
 
@@ -857,11 +858,19 @@
                 loading.style.display = 'none';
 
                 // Handle different types of errors
-                if (USE_STATIC_DATA) {
+                if (isLocalFile) {
+                    error.innerHTML = `
+                        <h3>🏠 Local Development Mode</h3>
+                        <p><strong>Running from local file system</strong></p>
+                        <p>✨ This shows the professional NFT design and functionality</p>
+                        <p>🚀 When deployed to GitHub/Cloudflare, it will load real character data from JSON</p>
+                        <p><em>Displaying sample NFT family tree for preview...</em></p>
+                    `;
+                } else if (USE_STATIC_DATA) {
                     error.innerHTML = `
                         <h3>📁 Data Loading Error</h3>
                         <p><strong>Cannot load characters.json:</strong> ${err.message}</p>
-                        <p>Make sure the characters.json file is in the same directory as this HTML file.</p>
+                        <p>Make sure the characters.json file is deployed with the HTML file.</p>
                         <p><em>Showing sample NFT layout for now...</em></p>
                     `;
                 } else {
@@ -965,7 +974,7 @@
 
                     <div class="nft-rarity rarity-${sampleTraits.rarity}"></div>
 
-                    <div class="portrait-avatar bg-${traits.rarity}">
+                    <div class="portrait-avatar bg-${sampleTraits.rarity}">
                         <div class="character-body">
                             <div class="character-head" style="background: ${sampleTraits.skin};">
                                 ${sampleTraits.hasHat ? `<div class="nft-hat" style="background: ${sampleTraits.hat};"></div>` : ''}

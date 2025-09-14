@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FishTank Civilization - Character Stories</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #ffd700;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            text-align: center;
+        }
+
+        .character-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .character-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 215, 0, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .character-card.alive {
+            border-left: 5px solid #90ee90;
+        }
+
+        .character-card.dead {
+            border-left: 5px solid #ff6b6b;
+            opacity: 0.8;
+        }
+
+        .character-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .character-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .character-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-alive {
+            background: rgba(144, 238, 144, 0.2);
+            color: #90ee90;
+        }
+
+        .status-dead {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .character-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: bold;
+        }
+
+        .character-timeline {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .timeline-icon {
+            font-size: 1.2em;
+            margin-right: 10px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .interactions-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+        }
+
+        .interaction-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            padding: 40px;
+            color: #aaa;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover,
+        .filter-button.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎭 Character Stories & Life Chronicles</h1>
+        <p>Birth, Death, and Everything In Between</p>
+    </div>
+
+    <div id="loading" class="loading">
+        <div>📚 Loading character stories...</div>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="stats-overview" class="stats-overview" style="display: none;"></div>
+
+    <div class="filters" id="filters" style="display: none;">
+        <button class="filter-button active" data-filter="all">All Characters</button>
+        <button class="filter-button" data-filter="alive">Living (💚)</button>
+        <button class="filter-button" data-filter="dead">Deceased (💀)</button>
+        <button class="filter-button" data-filter="recent">Recent Activity</button>
+    </div>
+
+    <div id="character-container" class="character-container" style="display: none;"></div>
+
+    <div id="interactions-section" class="interactions-section" style="display: none;">
+        <h2>🎪 Recent Character Interactions</h2>
+        <div id="interactions-list"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin.replace(':3050', ':3050').replace('file://', 'http://localhost:3050');
+        let allCharacters = [];
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCharacterData();
+            setupFilters();
+        });
+
+        function setupFilters() {
+            const filterButtons = document.querySelectorAll('.filter-button');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    displayFilteredCharacters();
+                });
+            });
+        }
+
+        async function loadCharacterData() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const statsOverview = document.getElementById('stats-overview');
+            const characterContainer = document.getElementById('character-container');
+            const interactionsSection = document.getElementById('interactions-section');
+            const filters = document.getElementById('filters');
+
+            // Show loading
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            statsOverview.style.display = 'none';
+            characterContainer.style.display = 'none';
+            interactionsSection.style.display = 'none';
+            filters.style.display = 'none';
+
+            try {
+                const charactersRes = await fetch(`${API_BASE}/api/characters`);
+
+                if (!charactersRes.ok) {
+                    throw new Error('Failed to fetch character data');
+                }
+
+                const characterData = await charactersRes.json();
+                allCharacters = characterData.characters;
+
+                // Hide loading
+                loading.style.display = 'none';
+
+                // Display stats overview
+                displayStatsOverview(characterData);
+                statsOverview.style.display = 'grid';
+
+                // Display characters
+                displayFilteredCharacters();
+                characterContainer.style.display = 'grid';
+                filters.style.display = 'flex';
+
+                // Display interactions
+                displayInteractions(characterData.recentInteractions);
+                interactionsSection.style.display = 'block';
+
+            } catch (err) {
+                console.error('Error loading character data:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = `Error loading character data: ${err.message}`;
+            }
+        }
+
+        function displayStatsOverview(data) {
+            const container = document.getElementById('stats-overview');
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>👥 Total Characters</h3>
+                    <div style="font-size: 2em; color: #ffd700;">${data.totalCharacters}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>💚 Living</h3>
+                    <div style="font-size: 2em; color: #90ee90;">${data.aliveCharacters}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>💀 Deceased</h3>
+                    <div style="font-size: 2em; color: #ff6b6b;">${data.deadCharacters}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>📅 Avg Lifespan</h3>
+                    <div style="font-size: 2em; color: #87ceeb;">${Math.round(data.averageLifespan)} days</div>
+                </div>
+            `;
+        }
+
+        function displayFilteredCharacters() {
+            let charactersToShow = allCharacters;
+
+            switch(currentFilter) {
+                case 'alive':
+                    charactersToShow = allCharacters.filter(c => c.is_alive);
+                    break;
+                case 'dead':
+                    charactersToShow = allCharacters.filter(c => !c.is_alive);
+                    break;
+                case 'recent':
+                    charactersToShow = allCharacters
+                        .sort((a, b) => b.birth_timestamp - a.birth_timestamp)
+                        .slice(0, 20);
+                    break;
+            }
+
+            displayCharacters(charactersToShow);
+        }
+
+        function displayCharacters(characters) {
+            const container = document.getElementById('character-container');
+
+            if (characters.length === 0) {
+                container.innerHTML = '<div class="error">No characters found matching the current filter.</div>';
+                return;
+            }
+
+            container.innerHTML = characters.map(character => `
+                <div class="character-card ${character.is_alive ? 'alive' : 'dead'}">
+                    <div class="character-header">
+                        <div>
+                            <div class="character-name">${character.first_name} ${character.last_name}</div>
+                            <div style="color: #aaa; font-size: 0.9em;">aka "${character.nickname}"</div>
+                        </div>
+                        <div class="character-status ${character.is_alive ? 'status-alive' : 'status-dead'}">
+                            ${character.is_alive ? '💚 Living' : '💀 Deceased'}
+                        </div>
+                    </div>
+
+                    <div class="character-details">
+                        <div class="detail-item">
+                            <div class="detail-label">🎂 Born</div>
+                            <div class="detail-value">${character.birth_date_formatted}</div>
+                        </div>
+                        ${!character.is_alive ? `
+                            <div class="detail-item">
+                                <div class="detail-label">⚱️ Died</div>
+                                <div class="detail-value">${character.death_date_formatted}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">💀 Cause of Death</div>
+                                <div class="detail-value">${character.death_cause || 'Unknown'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">⏰ Lifespan</div>
+                                <div class="detail-value">${character.lifespan_days} days</div>
+                            </div>
+                        ` : `
+                            <div class="detail-item">
+                                <div class="detail-label">📅 Days Alive</div>
+                                <div class="detail-value">${character.lifespan_days} days</div>
+                            </div>
+                        `}
+                        <div class="detail-item">
+                            <div class="detail-label">🧬 Age</div>
+                            <div class="detail-value">${character.age} years</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">⚧️ Gender</div>
+                            <div class="detail-value">${character.gender}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">💼 Occupation</div>
+                            <div class="detail-value">${character.occupation}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">🎭 Personality</div>
+                            <div class="detail-value">${character.personality}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">💰 Total Investment</div>
+                            <div class="detail-value">$${character.total_investment.toLocaleString()}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">🪙 Current Holdings</div>
+                            <div class="detail-value">${character.current_holding.toLocaleString()}</div>
+                        </div>
+                    </div>
+
+                    <div class="character-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">🎂</div>
+                            <div>Born on ${character.birth_date_formatted}</div>
+                        </div>
+                        ${!character.is_alive ? `
+                            <div class="timeline-item">
+                                <div class="timeline-icon">💀</div>
+                                <div>Died on ${character.death_date_formatted} - ${character.death_cause}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayInteractions(interactions) {
+            const container = document.getElementById('interactions-list');
+
+            if (interactions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #aaa;">No character interactions recorded yet.</div>';
+                return;
+            }
+
+            container.innerHTML = interactions.slice(0, 20).map(interaction => `
+                <div class="interaction-item">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <strong>${getInteractionIcon(interaction.interaction_type)} ${interaction.interaction_type.toUpperCase()}</strong>
+                        <span style="color: #aaa; font-size: 0.8em;">${new Date(interaction.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>${interaction.character1_name}</strong> and <strong>${interaction.character2_name}</strong>
+                    </div>
+                    <div style="color: #ccc; margin-bottom: 5px;">${interaction.description}</div>
+                    <div style="color: #90ee90; font-style: italic;">→ ${interaction.outcome}</div>
+                </div>
+            `).join('');
+        }
+
+        function getInteractionIcon(type) {
+            const icons = {
+                'conversation': '💬',
+                'argument': '😡',
+                'romance': '💕',
+                'business': '💼',
+                'rivalry': '⚔️',
+                'friendship': '🤝',
+                'prank': '🤡',
+                'gossip': '🗣️'
+            };
+            return icons[type] || '🎭';
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadCharacterData, 30000);
+    </script>
+</body>
+</html>
