@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FishTank Civilization - Family Tree</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #ffd700;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .family-container {
+            display: grid;
+            gap: 30px;
+        }
+
+        .family-dynasty {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            backdrop-filter: blur(15px);
+        }
+
+        .dynasty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .dynasty-title {
+            color: #ffd700;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .dynasty-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .founding-father {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .founding-father-title {
+            color: #ffd700;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .founding-father-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .generations {
+            margin-top: 20px;
+        }
+
+        .generation {
+            margin-bottom: 25px;
+        }
+
+        .generation-header {
+            color: #87ceeb;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(135, 206, 235, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .descendants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .descendant {
+            background: rgba(135, 206, 235, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(135, 206, 235, 0.3);
+        }
+
+        .descendant-name {
+            color: #87ceeb;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .descendant-details {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #cccccc;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #ffd700;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            color: #ff6b6b;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏛️ Family Tree of Our Beautiful Civilization 🏛️</h1>
+        <button class="refresh-btn" onclick="loadFamilyData()">🔄 Refresh Data</button>
+    </div>
+
+    <div id="loading" class="loading">Loading family dynasties...</div>
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="stats-overview" class="stats-overview" style="display: none;"></div>
+    <div id="family-container" class="family-container" style="display: none;"></div>
+
+    <script>
+        // Configuration - Update this with your server details
+        // For website deployment - use static JSON files
+        const API_BASE = ''; // Empty for relative paths to JSON files
+
+        async function loadFamilyData() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const statsOverview = document.getElementById('stats-overview');
+            const familyContainer = document.getElementById('family-container');
+
+            // Show loading
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            statsOverview.style.display = 'none';
+            familyContainer.style.display = 'none';
+
+            try {
+                const [familyTreeRes, statsRes] = await Promise.all([
+                    fetch('./family-tree.json'),
+                    fetch('./family-stats.json')
+                ]);
+
+                if (!familyTreeRes.ok || !statsRes.ok) {
+                    throw new Error('Failed to fetch family data');
+                }
+
+                const familyTree = await familyTreeRes.json();
+                const stats = await statsRes.json();
+
+                // Hide loading
+                loading.style.display = 'none';
+
+                // Display stats overview
+                displayStatsOverview(familyTree, stats);
+                statsOverview.style.display = 'grid';
+
+                // Display family tree
+                displayFamilyTree(familyTree, stats);
+                familyContainer.style.display = 'grid';
+
+            } catch (err) {
+                console.error('Error loading family data:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = `Error loading family data: ${err.message}`;
+            }
+        }
+
+        function displayStatsOverview(familyTree, stats) {
+            const container = document.getElementById('stats-overview');
+
+            const totalFamilies = familyTree.totalFoundingFathers;
+            const totalDescendants = familyTree.totalDescendants;
+            const totalMembers = totalFamilies + totalDescendants;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>🏛️ Total Dynasties</h3>
+                    <div style="font-size: 2em; color: #ffd700;">${totalFamilies}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>👑 Founding Fathers</h3>
+                    <div style="font-size: 2em; color: #ffd700;">${totalFamilies}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>👶 Total Descendants</h3>
+                    <div style="font-size: 2em; color: #87ceeb;">${totalDescendants}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>🌳 Total Family Members</h3>
+                    <div style="font-size: 2em; color: #90ee90;">${totalMembers}</div>
+                </div>
+            `;
+        }
+
+        function displayFamilyTree(familyTree, stats) {
+            const container = document.getElementById('family-container');
+
+            if (familyTree.foundingFathers.length === 0) {
+                container.innerHTML = '<div class="error">No founding fathers have been established yet. Wait for significant investors to join!</div>';
+                return;
+            }
+
+            // Group descendants by founding father
+            const familyGroups = {};
+            familyTree.foundingFathers.forEach(ff => {
+                familyGroups[ff.id] = {
+                    foundingFather: ff,
+                    descendants: familyTree.descendants.filter(d => d.foundingFatherId === ff.id)
+                };
+            });
+
+            // Group descendants by generation
+            Object.keys(familyGroups).forEach(ffId => {
+                const family = familyGroups[ffId];
+                const generationGroups = {};
+
+                family.descendants.forEach(descendant => {
+                    if (!generationGroups[descendant.generation]) {
+                        generationGroups[descendant.generation] = [];
+                    }
+                    generationGroups[descendant.generation].push(descendant);
+                });
+
+                family.generationGroups = generationGroups;
+            });
+
+            container.innerHTML = Object.values(familyGroups).map(family => {
+                const ff = family.foundingFather;
+                const descendants = family.descendants;
+                const generations = Object.keys(family.generationGroups).sort((a, b) => parseInt(a) - parseInt(b));
+
+                const generationsHtml = generations.map(genNum => {
+                    const genDescendants = family.generationGroups[genNum];
+                    const genTitle = genNum == 1 ? 'Children' : genNum == 2 ? 'Grandchildren' : genNum == 3 ? 'Great-Grandchildren' : `Generation ${genNum}`;
+
+                    return `
+                        <div class="generation">
+                            <div class="generation-header">${genTitle} (${genDescendants.length})</div>
+                            <div class="descendants-grid">
+                                ${genDescendants.map(desc => `
+                                    <div class="descendant">
+                                        <div class="descendant-name">${desc.nickname}</div>
+                                        <div class="descendant-details">
+                                            <div>💰 Investment: $${desc.totalInvestment.toFixed(2)}</div>
+                                            <div>📊 Holdings: ${desc.currentHolding.toFixed(2)}</div>
+                                            <div>🔗 ${desc.relationshipType}</div>
+                                            <div>📅 Joined: ${new Date(desc.firstBuyTimestamp).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="family-dynasty">
+                        <div class="dynasty-header">
+                            <div class="dynasty-title">${ff.familyName}</div>
+                            <div class="dynasty-stats">
+                                <span>👑 ${ff.title}</span>
+                                <span>👥 ${descendants.length + 1} members</span>
+                                <span>🏆 ${generations.length} generations</span>
+                            </div>
+                        </div>
+
+                        <div class="founding-father">
+                            <div class="founding-father-title">👑 ${ff.nickname} - ${ff.title}</div>
+                            <div class="founding-father-details">
+                                <div>💰 Investment: $${ff.totalInvestment.toFixed(2)}</div>
+                                <div>📊 Holdings: ${ff.currentHolding.toFixed(2)}</div>
+                                <div>🎯 Ownership: ${ff.ownershipPercentage.toFixed(3)}%</div>
+                                <div>📅 Founded: ${new Date(ff.firstBuyTimestamp).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+
+                        <div class="generations">
+                            ${generationsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadFamilyData, 30000);
+
+        // Load data on page load
+        loadFamilyData();
+    </script>
+</body>
+</html>
